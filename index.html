@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SavvyLiving</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060d1a;--bg-card:#0d1f35;--bg-card2:#112440;--bg-input:#0a1828;
+  --accent:#2d7ef7;--accent-light:#5b9dfa;--accent-dim:rgba(45,126,247,0.12);--accent-border:rgba(45,126,247,0.35);
+  --text:#e8f0fe;--text-sec:#7a9cc0;--text-muted:#3f5a78;
+  --border:rgba(255,255,255,0.07);
+  --up:#22c988;--down:#f05d5d;--up-bg:rgba(34,201,136,0.12);--down-bg:rgba(240,93,93,0.12);
+  --neutral:#5b9dfa;--neutral-bg:rgba(91,157,250,0.12);
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:18px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(45,126,247,0.18) 0%,transparent 70%),radial-gradient(ellipse 40% 30% at 80% 80%,rgba(45,126,247,0.08) 0%,transparent 60%)}
+
+/* LAYOUT */
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;flex-shrink:0;background:rgba(13,31,53,0.9);border-right:0.5px solid var(--border);
+  padding:1.5rem 1rem;display:flex;flex-direction:column;gap:4px;
+  position:fixed;top:0;left:0;bottom:0;backdrop-filter:blur(12px);z-index:100;overflow-y:auto}
+.logo{font-size:16px;font-weight:600;padding:0 8px 1.5rem;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-md);
+  border:none;background:transparent;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;
+  color:var(--text-sec);transition:all .15s;text-align:left;width:100%}
+.nav-btn:hover{background:var(--accent-dim);color:var(--text)}
+.nav-btn.active{background:var(--accent-dim);color:var(--accent-light);border:0.5px solid var(--accent-border)}
+.nav-icon{font-size:15px;width:18px;text-align:center}
+.main{margin-left:220px;flex:1;padding:2rem 2.5rem;max-width:calc(100vw - 220px)}
+.page{display:none}
+.page.active{display:block}
+.page-header{margin-bottom:1.5rem}
+.page-title{font-size:22px;font-weight:600;letter-spacing:-0.02em}
+.page-subtitle{font-size:13px;color:var(--text-sec);margin-top:3px}
+
+/* DASHBOARD */
+.dash-welcome{font-size:26px;font-weight:600;letter-spacing:-0.02em;margin-bottom:6px}
+.dash-sub{font-size:14px;color:var(--text-sec);margin-bottom:2rem}
+.dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.dash-card{background:var(--bg-card);border:0.5px solid var(--border);border-radius:var(--r-xl);
+  padding:1.75rem 1.5rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:12px;min-height:180px}
+.dash-card:hover{border-color:var(--accent-border);background:var(--bg-card2);transform:translateY(-2px)}
+.dash-card-icon{font-size:22px}
+.dash-card-title{font-size:15px;font-weight:600}
+.dash-card-desc{font-size:12px;color:var(--text-sec);line-height:1.6;flex:1}
+.dash-card-bottom{margin-top:auto}
+.dash-card-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:4px}
+.dash-card-stat{font-size:22px;font-weight:500;font-family:'DM Mono',monospace}
+
+/* CARDS */
+.card{background:var(--bg-card);border:0.5px solid var(--border);border-radius:var(--r-lg);padding:1.25rem 1.5rem;margin-bottom:12px}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1rem}
+.metric{background:var(--bg-card2);border:0.5px solid var(--border);border-radius:var(--r-md);padding:14px 16px}
+.metric-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.metric-value{font-size:22px;font-weight:500;font-family:'DM Mono',monospace}
+
+/* INPUTS */
+.input-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+input[type=text],input[type=number],select{
+  padding:9px 12px;border-radius:var(--r-md);border:0.5px solid var(--border);
+  background:var(--bg-input);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;
+  outline:none;transition:border-color .15s}
+input:focus,select:focus{border-color:var(--accent-border)}
+select option{background:var(--bg-card)}
+.btn{padding:9px 16px;border-radius:var(--r-md);border:0.5px solid var(--border);background:transparent;
+  cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text-sec);transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--accent-dim);color:var(--text);border-color:var(--accent-border)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:500}
+.btn-primary:hover{background:var(--accent-light);border-color:var(--accent-light);color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-danger{color:var(--down);border-color:rgba(240,93,93,0.3)}
+.btn-danger:hover{background:rgba(240,93,93,0.1);border-color:var(--down)}
+
+/* BADGES */
+.badge{font-size:11px;padding:3px 8px;border-radius:var(--r-sm);font-weight:500;display:inline-block;font-family:'DM Mono',monospace}
+.badge.up{background:var(--up-bg);color:var(--up)}
+.badge.down{background:var(--down-bg);color:var(--down)}
+.cat-badge{font-size:10px;padding:2px 8px;border-radius:100px;font-weight:500}
+.cat-investment{background:rgba(45,126,247,.15);color:#5b9dfa}
+.cat-subscription{background:rgba(139,92,246,.15);color:#a78bfa}
+.cat-bill{background:rgba(245,158,11,.15);color:#fbbf24}
+.cat-other{background:rgba(107,114,128,.15);color:#9ca3af}
+
+/* TIME SELECTOR */
+.time-selector{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px}
+.time-btn{padding:4px 10px;border-radius:var(--r-sm);border:0.5px solid var(--border);background:transparent;
+  cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text-muted);transition:all .15s}
+.time-btn:hover{color:var(--text);border-color:var(--accent-border)}
+.time-btn.active{background:var(--accent-dim);color:var(--accent-light);border-color:var(--accent-border)}
+
+/* TICKER CARDS */
+.ticker-card{background:var(--bg-card);border:0.5px solid var(--border);border-radius:var(--r-lg);margin-bottom:12px;overflow:hidden;transition:border-color .15s}
+.ticker-card:hover{border-color:rgba(45,126,247,.25)}
+.ticker-top{padding:1.25rem 1.5rem}
+
+/* HOLDINGS TABLE */
+.h-col-header{display:grid;grid-template-columns:2.5fr 1.2fr 1.2fr 1.2fr 120px;gap:8px;
+  padding:0 1.5rem 8px;border-bottom:0.5px solid var(--border);margin-bottom:4px}
+.h-col-row{display:grid;grid-template-columns:2.5fr 1.2fr 1.2fr 1.2fr 120px;gap:8px;align-items:start}
+.th{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);font-weight:500}
+
+/* TICKER INFO */
+.ticker-sym{font-size:15px;font-weight:600;font-family:'DM Mono',monospace;color:var(--accent-light)}
+.ticker-name{font-size:12px;color:var(--text-sec);margin-top:2px}
+.ticker-desc{font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.5}
+.col-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:3px}
+.col-value{font-size:15px;font-weight:500;font-family:'DM Mono',monospace}
+.col-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+
+/* COLLAPSIBLE */
+.collapse-toggle{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:11px;
+  padding:4px 8px;border-radius:var(--r-sm);transition:all .15s;font-family:'DM Sans',sans-serif}
+.collapse-toggle:hover{color:var(--accent-light);background:var(--accent-dim)}
+.collapsible{display:none}
+.collapsible.open{display:block}
+
+/* CHART */
+.chart-wrap{position:relative;width:100%;height:200px;padding:0 1.5rem 1rem}
+
+/* INDICATORS */
+.indicator-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:0 1.5rem 1rem}
+.ind-box{background:var(--bg-card2);border-radius:var(--r-sm);padding:8px 10px}
+.ind-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:3px}
+.ind-val{font-size:13px;font-weight:500;font-family:'DM Mono',monospace}
+
+/* NEWS */
+.news-wrap{padding:0 1.5rem 1rem}
+.news-item{padding:10px 0;border-bottom:0.5px solid var(--border)}
+.news-item:last-child{border-bottom:none}
+.news-headline a{font-size:13px;color:var(--text);text-decoration:none;line-height:1.5}
+.news-headline a:hover{color:var(--accent-light)}
+.news-meta{font-size:11px;color:var(--text-muted);margin-top:3px}
+
+/* PAYCHECK */
+.slider-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.slider-label{font-size:13px;width:160px;flex-shrink:0;color:var(--text-sec)}
+.slider-row input[type=range]{flex:1;accent-color:var(--accent);cursor:pointer;height:4px}
+.pct-display{font-size:15px;font-weight:600;font-family:'DM Mono',monospace;width:48px;
+  text-align:right;flex-shrink:0;color:var(--accent-light)}
+.alloc-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.alloc-label{font-size:13px;color:var(--text-sec);width:160px;flex-shrink:0}
+.alloc-bar-wrap{flex:1;height:6px;background:var(--bg-card2);border-radius:3px;overflow:hidden}
+.alloc-bar{height:100%;border-radius:3px;transition:width .25s}
+.alloc-amt{font-size:13px;font-weight:500;font-family:'DM Mono',monospace;width:80px;text-align:right;flex-shrink:0}
+.alloc-pct{font-size:12px;color:var(--text-muted);width:35px;text-align:right;flex-shrink:0}
+
+/* RECURRING TABLE */
+.rec-table{width:100%;border-collapse:collapse}
+.rec-table th{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);
+  padding:0 12px 10px;text-align:left;font-weight:500}
+.rec-table td{padding:10px 12px;font-size:13px;border-top:0.5px solid var(--border);vertical-align:middle}
+.rec-table tr.data-row:hover td{background:var(--accent-dim)}
+.rec-table tr.edit-row td{background:var(--bg-card2);padding:8px 12px}
+.edit-input{padding:6px 10px;border-radius:var(--r-sm);border:0.5px solid var(--accent-border);
+  background:var(--bg-input);color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;width:100%;outline:none}
+
+/* CASHFLOW */
+.cf-item{display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:12px;align-items:center;
+  padding:10px 12px;border-radius:var(--r-md);margin-bottom:6px;
+  background:var(--bg-card2);border:0.5px solid var(--border);transition:border-color .15s}
+.cf-item:hover{border-color:var(--accent-border)}
+.cf-edit-row{background:var(--bg-card2);border:0.5px solid var(--accent-border);border-radius:var(--r-md);
+  padding:10px 12px;margin-bottom:6px;display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center}
+
+/* SECTION LABEL */
+.section-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:10px;font-weight:500}
+.divider{height:0.5px;background:var(--border);margin:14px 0}
+.loading{font-size:13px;color:var(--text-muted);padding:12px 0}
+.error-msg{font-size:12px;color:var(--down);padding:4px 0 8px;min-height:20px}
+.remove-btn{background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;line-height:1;padding:2px 4px;transition:color .15s}
+.remove-btn:hover{color:var(--down)}
+.api-note{font-size:11px;color:var(--text-muted);margin-top:8px}
+
+@media(max-width:900px){
+  .dash-grid{grid-template-columns:repeat(2,1fr)}
+  .h-col-header,.h-col-row{grid-template-columns:2fr 1fr 1fr 80px}
+  .h-col-header>*:nth-child(4),.h-col-row>*:nth-child(4){display:none}
+  .indicator-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:650px){
+  .sidebar{width:58px;padding:1rem 8px}
+  .logo span,.nav-btn span{display:none}
+  .main{margin-left:58px;padding:1.5rem 1rem;max-width:calc(100vw - 58px)}
+  .dash-grid{grid-template-columns:1fr}
+  .h-col-header,.h-col-row{grid-template-columns:2fr 1fr 80px}
+  .h-col-header>*:nth-child(3),.h-col-row>*:nth-child(3),
+  .h-col-header>*:nth-child(4),.h-col-row>*:nth-child(4){display:none}
+  .cf-item{grid-template-columns:1fr 1fr auto}
+  .cf-item>*:nth-child(3){display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<nav class="sidebar">
+  <div class="logo"><div class="logo-dot"></div><span>SavvyLiving</span></div>
+  <button class="nav-btn" data-page="dashboard"  onclick="showPage('dashboard',this)"><span class="nav-icon">⌂</span><span>Dashboard</span></button>
+  <button class="nav-btn" data-page="holdings"   onclick="showPage('holdings',this)"><span class="nav-icon">◈</span><span>Holdings</span></button>
+  <button class="nav-btn" data-page="watchlist"  onclick="showPage('watchlist',this)"><span class="nav-icon">◉</span><span>Watchlist</span></button>
+  <button class="nav-btn" data-page="paycheck"   onclick="showPage('paycheck',this)"><span class="nav-icon">◎</span><span>Paycheck</span></button>
+  <button class="nav-btn" data-page="recurring"  onclick="showPage('recurring',this)"><span class="nav-icon">↺</span><span>Recurring Payments</span></button>
+  <button class="nav-btn" data-page="cashflow"   onclick="showPage('cashflow',this)"><span class="nav-icon">⇄</span><span>Cash Flow</span></button>
+</nav>
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="page">
+    <div class="dash-welcome">Good to see you 👋</div>
+    <div class="dash-sub">Here's a snapshot of your financial picture.</div>
+    <div class="dash-grid">
+      <div class="dash-card" onclick="navTo('holdings')">
+        <div class="dash-card-icon">◈</div>
+        <div class="dash-card-title">Holdings</div>
+        <div class="dash-card-desc">Track your stock positions, cost basis, and total portfolio performance.</div>
+        <div class="dash-card-bottom"><div class="dash-card-label">Portfolio value</div><div class="dash-card-stat" id="dash-portfolio">—</div></div>
+      </div>
+      <div class="dash-card" onclick="navTo('watchlist')">
+        <div class="dash-card-icon">◉</div>
+        <div class="dash-card-title">Watchlist</div>
+        <div class="dash-card-desc">Monitor tickers with live prices, key indicators, news, and AI analysis.</div>
+        <div class="dash-card-bottom"><div class="dash-card-label">Tickers watching</div><div class="dash-card-stat" id="dash-watchcount">—</div></div>
+      </div>
+      <div class="dash-card" onclick="navTo('paycheck')">
+        <div class="dash-card-icon">◎</div>
+        <div class="dash-card-title">Paycheck</div>
+        <div class="dash-card-desc">Break down your take-home pay across housing, savings, investing, and more.</div>
+        <div class="dash-card-bottom"><div class="dash-card-label">Take-home pay</div><div class="dash-card-stat" id="dash-pay">—</div></div>
+      </div>
+      <div class="dash-card" onclick="navTo('recurring')">
+        <div class="dash-card-icon">↺</div>
+        <div class="dash-card-title">Recurring Payments</div>
+        <div class="dash-card-desc">Track investments, subscriptions, and bills with frequency and due dates.</div>
+        <div class="dash-card-bottom"><div class="dash-card-label">Monthly commitments</div><div class="dash-card-stat" id="dash-recurring">—</div></div>
+      </div>
+      <div class="dash-card" onclick="navTo('cashflow')">
+        <div class="dash-card-icon">⇄</div>
+        <div class="dash-card-title">Cash Flow</div>
+        <div class="dash-card-desc">Map every recurring payment to its source bank account or card.</div>
+        <div class="dash-card-bottom"><div class="dash-card-label">Payments mapped</div><div class="dash-card-stat" id="dash-mapped">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOLDINGS -->
+  <div id="holdings" class="page">
+    <div class="page-header"><div class="page-title">Holdings</div><div class="page-subtitle">Your positions, cost basis, and performance</div></div>
+    <div class="card">
+      <div class="input-row">
+        <input type="text" id="h-ticker" placeholder="Ticker" style="width:110px"/>
+        <input type="number" id="h-shares" placeholder="Shares" style="width:95px" min="0" step="any"/>
+        <input type="number" id="h-cost" placeholder="Avg cost $" style="width:110px" min="0" step="any"/>
+        <button class="btn btn-primary" onclick="addHolding()">Add position</button>
+      </div>
+      <div id="h-error" class="error-msg"></div>
+    </div>
+    <div class="time-selector" id="h-time-sel"></div>
+    <div class="h-col-header">
+      <div class="th">Ticker / Company</div>
+      <div class="th">Price &amp; Today</div>
+      <div class="th">Gain / Loss</div>
+      <div class="th">Market Value</div>
+      <div class="th"></div>
+    </div>
+    <div id="holdings-list"></div>
+    <div id="portfolio-summary"></div>
+  </div>
+
+  <!-- WATCHLIST -->
+  <div id="watchlist" class="page">
+    <div class="page-header"><div class="page-title">Watchlist</div><div class="page-subtitle">Live prices, indicators, charts, and news</div></div>
+    <div class="card">
+      <div class="input-row">
+        <input type="text" id="w-ticker" placeholder="Ticker" style="width:130px"/>
+        <button class="btn btn-primary" onclick="addToWatchlist()">Add ticker</button>
+        <button class="btn btn-sm" onclick="collapseAll()" style="margin-left:auto">Collapse all</button>
+      </div>
+      <div id="w-error" class="error-msg"></div>
+    </div>
+    <div class="time-selector" id="w-time-sel"></div>
+    <div id="watchlist-list"></div>
+  </div>
+
+  <!-- PAYCHECK -->
+  <div id="paycheck" class="page">
+    <div class="page-header"><div class="page-title">Paycheck Allocator</div><div class="page-subtitle">Break down your take-home pay</div></div>
+    <div class="card">
+      <div class="input-row" style="margin-bottom:20px">
+        <label style="font-size:13px;color:var(--text-sec);width:130px;flex-shrink:0">Take-home pay</label>
+        <input type="number" id="paycheck-amt" placeholder="e.g. 3000" style="width:160px" oninput="paycheckChanged()"/>
+      </div>
+      <div id="alloc-sliders"></div>
+    </div>
+    <div class="card">
+      <div class="section-label">Breakdown</div>
+      <div id="alloc-bars"></div>
+      <div class="divider"></div>
+      <div id="alloc-remaining"></div>
+    </div>
+  </div>
+
+  <!-- RECURRING -->
+  <div id="recurring" class="page">
+    <div class="page-header"><div class="page-title">Recurring Payments</div><div class="page-subtitle">Investments, subscriptions, and bills</div></div>
+    <div class="card">
+      <div class="input-row" style="flex-wrap:wrap;gap:8px">
+        <input type="text" id="rec-name" placeholder="Name (e.g. Spotify)" style="width:150px"/>
+        <select id="rec-cat" style="width:140px">
+          <option value="investment">Investment</option>
+          <option value="subscription">Subscription</option>
+          <option value="bill">Bill</option>
+          <option value="other">Other</option>
+        </select>
+        <input type="number" id="rec-amount" placeholder="Amount $" style="width:110px" min="0" step="any"/>
+        <select id="rec-freq" style="width:130px">
+          <option value="weekly">Weekly</option>
+          <option value="biweekly">Bi-weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="quarterly">Quarterly</option>
+          <option value="annually">Annually</option>
+        </select>
+        <input type="text" id="rec-date" placeholder="Due date (e.g. 1st)" style="width:140px"/>
+        <button class="btn btn-primary" onclick="addRecurring()">Add</button>
+      </div>
+      <div id="rec-error" class="error-msg"></div>
+    </div>
+    <div id="recurring-list"></div>
+    <div id="recurring-summary"></div>
+  </div>
+
+  <!-- CASHFLOW -->
+  <div id="cashflow" class="page">
+    <div class="page-header"><div class="page-title">Cash Flow</div><div class="page-subtitle">Map each payment to its source account or card</div></div>
+    <div class="card">
+      <div class="input-row" style="flex-wrap:wrap;gap:8px">
+        <select id="cf-recurring" style="width:210px"></select>
+        <input type="text" id="cf-source" placeholder="Account / card" style="width:200px" list="cf-source-list"/>
+        <datalist id="cf-source-list"></datalist>
+        <button class="btn btn-primary" onclick="addCashFlow()">Map</button>
+      </div>
+      <div id="cf-error" class="error-msg"></div>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:4px">Add recurring payments first, then map them to accounts here.</p>
+    </div>
+    <div id="cashflow-list"></div>
+    <div id="cashflow-summary"></div>
+  </div>
+
+</main>
+</div>
+
+<script>
+// ── KEYS ──
+const FINNHUB_KEY = 'YOUR_FINNHUB_KEY';
+const GEMINI_KEY  = 'YOUR_GEMINI_KEY';
+
+// ── STATE ──
+let holdings  = JSON.parse(localStorage.getItem('savvy_holdings')  || '[]');
+let watchlist = JSON.parse(localStorage.getItem('savvy_watchlist') || '[]');
+let recurring = JSON.parse(localStorage.getItem('savvy_recurring') || '[]');
+let cashflows = JSON.parse(localStorage.getItem('savvy_cashflows') || '[]');
+let allocPcts = JSON.parse(localStorage.getItem('savvy_alloc')     || 'null') || [30,10,20,15,10,10];
+let hPeriod   = localStorage.getItem('savvy_hperiod') || '1D';
+let wPeriod   = localStorage.getItem('savvy_wperiod') || '1D';
+
+const ALLOC_CATS = [
+  {label:'Rent / Housing',color:'#2d7ef7'},
+  {label:'Groceries',color:'#22c988'},
+  {label:'Roth IRA / Investing',color:'#a78bfa'},
+  {label:'Student Loans',color:'#f05d5d'},
+  {label:'Savings',color:'#fbbf24'},
+  {label:'Discretionary',color:'#f472b6'},
+];
+const PERIODS = ['1D','1W','1M','3M','6M','YTD','1Y','5Y','10Y','All'];
+const CAT_LABELS  = {investment:'Investment',subscription:'Subscription',bill:'Bill',other:'Other'};
+const CAT_CLASSES = {investment:'cat-investment',subscription:'cat-subscription',bill:'cat-bill',other:'cat-other'};
+const FREQ_LABELS = {weekly:'Weekly',biweekly:'Bi-weekly',monthly:'Monthly',quarterly:'Quarterly',annually:'Annually'};
+const FREQ_OPTS   = Object.entries(FREQ_LABELS).map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+
+function save() {
+  localStorage.setItem('savvy_holdings',  JSON.stringify(holdings));
+  localStorage.setItem('savvy_watchlist', JSON.stringify(watchlist));
+  localStorage.setItem('savvy_recurring', JSON.stringify(recurring));
+  localStorage.setItem('savvy_cashflows', JSON.stringify(cashflows));
+  localStorage.setItem('savvy_alloc',     JSON.stringify(allocPcts));
+}
+
+// ── FORMATTERS ──
+function fmt(n,d=2)  { return (n==null||isNaN(n))?'—':Number(n).toFixed(d); }
+function fmtPct(n)   { if(n==null||isNaN(n))return'—';return(n>=0?'+':'')+Number(n).toFixed(2)+'%'; }
+function fmtMoney(n) { if(n==null||isNaN(n)||n===0)return'—';return'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+// ── NAV ──
+function showPage(page, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(page).classList.add('active');
+  if(btn) btn.classList.add('active');
+  else {
+    const b = document.querySelector(`.nav-btn[data-page="${page}"]`);
+    if(b) b.classList.add('active');
+  }
+  localStorage.setItem('savvy_page', page);
+  if(page==='cashflow')  { populateCFDropdown(); updateCFSourceList(); }
+  if(page==='dashboard') updateDashboard();
+}
+
+function navTo(page) { showPage(page, null); }
+
+function updateDashboard() {
+  document.getElementById('dash-watchcount').textContent = watchlist.length || '0';
+  document.getElementById('dash-mapped').textContent     = cashflows.length || '0';
+  const pay = parseFloat(localStorage.getItem('savvy_payamt')||'0');
+  document.getElementById('dash-pay').textContent = pay ? fmtMoney(pay) : '—';
+  const totalMo = recurring.reduce((a,r)=>a+monthlyEquiv(r.amount,r.freq),0);
+  document.getElementById('dash-recurring').textContent = totalMo ? fmtMoney(totalMo) : '—';
+}
+
+// ── FINNHUB ──
+async function finnhub(path) {
+  const r = await fetch(`https://finnhub.io/api/v1/${path}&token=${FINNHUB_KEY}`);
+  if(!r.ok) throw new Error('Finnhub '+r.status);
+  return r.json();
+}
+const fetchQuote   = t => finnhub(`quote?symbol=${t}`);
+const fetchMetrics = t => finnhub(`stock/metric?symbol=${t}&metric=all`);
+const fetchProfile = t => finnhub(`stock/profile2?symbol=${t}`);
+const fetchNews    = t => {
+  const to=new Date().toISOString().split('T')[0];
+  const from=new Date(Date.now()-7*24*60*60*1000).toISOString().split('T')[0];
+  return finnhub(`company-news?symbol=${t}&from=${from}&to=${to}`);
+};
+
+// ── YAHOO CHART ──
+async function fetchYahooChart(ticker, period) {
+  const rangeMap    = {'1D':'1d','1W':'5d','1M':'1mo','3M':'3mo','6M':'6mo','YTD':'ytd','1Y':'1y','5Y':'5y','10Y':'10y','All':'max'};
+  const intervalMap = {'1D':'5m','1W':'60m','1M':'1d','3M':'1d','6M':'1wk','YTD':'1d','1Y':'1wk','5Y':'1mo','10Y':'3mo','All':'3mo'};
+  const range    = rangeMap[period]||'1mo';
+  const interval = intervalMap[period]||'1d';
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=${interval}&range=${range}&corsDomain=finance.yahoo.com`;
+    const r = await fetch(url, {headers:{'User-Agent':'Mozilla/5.0'}});
+    const d = await r.json();
+    const result = d?.chart?.result?.[0];
+    if(!result) return null;
+    const ts     = result.timestamp||[];
+    const closes = result.indicators?.quote?.[0]?.close||[];
+    return ts.map((t,i)=>({t:t*1000,c:closes[i]})).filter(p=>p.c!=null);
+  } catch(e) { return null; }
+}
+
+function calcPeriodChange(data) {
+  if(!data||data.length<2) return null;
+  const f=data[0].c, l=data[data.length-1].c;
+  return ((l-f)/f)*100;
+}
+
+// ── CHARTS ──
+const chartInstances = {};
+function renderChart(canvasId, data) {
+  if(chartInstances[canvasId]) { chartInstances[canvasId].destroy(); delete chartInstances[canvasId]; }
+  const canvas = document.getElementById(canvasId);
+  if(!canvas||!data||data.length<2) return;
+  const values = data.map(d=>d.c);
+  const up = values[values.length-1] >= values[0];
+  const color = up ? '#22c988' : '#f05d5d';
+  chartInstances[canvasId] = new Chart(canvas, {
+    type:'line',
+    data:{
+      labels: data.map(d=>{
+        const dt=new Date(d.t);
+        return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      }),
+      datasets:[{data:values,borderColor:color,borderWidth:1.5,pointRadius:0,tension:0.3,fill:true,
+        backgroundColor: up?'rgba(34,201,136,0.08)':'rgba(240,93,93,0.08)'}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,
+        callbacks:{label:ctx=>' $'+ctx.raw?.toFixed(2)}}},
+      scales:{
+        x:{display:false},
+        y:{display:true,grid:{color:'rgba(255,255,255,0.04)'},
+          ticks:{color:'#3f5a78',font:{size:10},maxTicksLimit:4,callback:v=>'$'+Number(v).toFixed(0)}}
+      }
+    }
+  });
+}
+
+// ── TIME SELECTORS ──
+function buildTimeSel(elId, current, cb) {
+  document.getElementById(elId).innerHTML = PERIODS.map(p=>
+    `<button class="time-btn${p===current?' active':''}" onclick="${cb}('${p}',this)">${p}</button>`
+  ).join('');
+}
+
+function setHPeriod(p, btn) {
+  hPeriod = p;
+  localStorage.setItem('savvy_hperiod', p);
+  document.querySelectorAll('#h-time-sel .time-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderHoldings();
+}
+
+function setWPeriod(p, btn) {
+  wPeriod = p;
+  localStorage.setItem('savvy_wperiod', p);
+  document.querySelectorAll('#w-time-sel .time-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderWatchlist();
+}
+
+// ── COLLAPSE ──
+function toggleCollapse(id) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  const open = el.classList.toggle('open');
+  const btn = document.querySelector(`[data-toggle="${id}"]`);
+  if(btn) btn.textContent = open ? 'less ▴' : 'more ▾';
+}
+
+function collapseAll() {
+  document.querySelectorAll('.collapsible.open').forEach(el=>{
+    el.classList.remove('open');
+    const btn = document.querySelector(`[data-toggle="${el.id}"]`);
+    if(btn) btn.textContent = 'more ▾';
+  });
+}
+
+// ── AI ──
+async function loadAI(ticker, avgCost) {
+  const el = document.getElementById('ai-'+ticker);
+  if(!el) return;
+  if(GEMINI_KEY==='YOUR_GEMINI_KEY') {
+    el.innerHTML=`<div style="margin-top:12px;padding:12px;background:var(--accent-dim);border:0.5px solid var(--accent-border);border-radius:var(--r-md);font-size:12px;color:var(--text-sec)">Add your Gemini API key to enable AI analysis.</div>`;
+    return;
+  }
+  el.innerHTML='<p class="loading" style="margin-top:10px">Generating analysis...</p>';
+  try {
+    const {GoogleGenerativeAI} = await import('https://esm.sh/@google/generative-ai@0.21.0');
+    const [quote,metrics,news] = await Promise.all([fetchQuote(ticker),fetchMetrics(ticker),fetchNews(ticker)]);
+    const m=metrics.metric||{};
+    const headlines=(news||[]).slice(0,5).map(n=>'- '+n.headline).join('\n')||'No recent news.';
+    const avgLine=avgCost?`\nInvestor avg cost: $${avgCost} (stock is ${quote.c>avgCost?'above':'below'} avg cost)`:'';
+    const prompt=`You are a concise financial analyst. For ${ticker}, write 4-5 sentences: what's driving price today, what key indicators say about valuation, short-term momentum direction.${avgCost?' Note how current price compares to investor avg cost.':''} Direct, no fluff.\n\nPrice: $${quote.c} | Day: ${(quote.dp||0).toFixed(2)}% | H: $${quote.h} | L: $${quote.l} | Prev: $${quote.pc}${avgLine}\nPE: ${m.peNormalizedAnnual??'N/A'} | Fwd PE: ${m.forwardPE??'N/A'} | EPS: ${m.epsTTM??'N/A'}\n52W: $${m['52WeekHigh']??'N/A'} / $${m['52WeekLow']??'N/A'} | Cap: $${m.marketCapitalization?(m.marketCapitalization/1000).toFixed(1)+'B':'N/A'}\n\nHeadlines:\n${headlines}`;
+    const genAI=new GoogleGenerativeAI(GEMINI_KEY);
+    const model=genAI.getGenerativeModel({model:'gemini-2.0-flash'});
+    const result=await model.generateContent(prompt);
+    const text=result.response.text();
+    el.innerHTML=`<div style="margin-top:12px;padding:14px;background:var(--accent-dim);border:0.5px solid var(--accent-border);border-radius:var(--r-md)">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent-light);margin-bottom:8px;font-weight:500">AI analysis · ${ticker}</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.7">${text.replace(/\n/g,'<br>')}</div>
+    </div>`;
+  } catch(e) {
+    el.innerHTML=`<div style="margin-top:10px;font-size:12px;color:var(--down)">AI error: ${e.message}</div>`;
+  }
+}
+
+async function loadNews(ticker, suffix) {
+  const id='news-'+(suffix||ticker);
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.innerHTML='<p class="loading" style="padding:10px 0">Loading news...</p>';
+  try {
+    const news=await fetchNews(ticker);
+    if(!news||!news.length){el.innerHTML='<p class="loading" style="padding:10px 0">No recent news.</p>';return;}
+    el.innerHTML=news.slice(0,5).map(n=>{
+      const d=new Date(n.datetime*1000).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      return `<div class="news-item"><div class="news-headline"><a href="${n.url}" target="_blank">${n.headline}</a></div><div class="news-meta">${n.source} &middot; ${d}</div></div>`;
+    }).join('');
+  } catch(e){el.innerHTML='<p style="font-size:12px;color:var(--down);padding:8px 0">Could not load news.</p>';}
+}
+
+// ── HOLDINGS ──
+function addHolding() {
+  const ticker=document.getElementById('h-ticker').value.trim().toUpperCase();
+  const shares=parseFloat(document.getElementById('h-shares').value);
+  const cost  =parseFloat(document.getElementById('h-cost').value);
+  const err   =document.getElementById('h-error');
+  if(!ticker||isNaN(shares)||isNaN(cost)){err.textContent='Fill in all fields.';return;}
+  if(holdings.find(h=>h.ticker===ticker)){err.textContent='Already in holdings.';return;}
+  err.textContent='';
+  holdings.push({ticker,shares,cost});
+  save();
+  document.getElementById('h-ticker').value='';
+  document.getElementById('h-shares').value='';
+  document.getElementById('h-cost').value='';
+  renderHoldings();
+}
+
+function removeHolding(ticker){holdings=holdings.filter(h=>h.ticker!==ticker);save();renderHoldings();}
+
+async function renderHoldings() {
+  const el =document.getElementById('holdings-list');
+  const sum=document.getElementById('portfolio-summary');
+  if(!holdings.length){el.innerHTML='<p class="loading">No positions yet.</p>';sum.innerHTML='';return;}
+  if(FINNHUB_KEY==='YOUR_FINNHUB_KEY'){el.innerHTML='<p class="error-msg">Add your Finnhub key.</p>';return;}
+  el.innerHTML='<p class="loading">Fetching prices...</p>';
+  try {
+    const [quotes,profiles]=await Promise.all([
+      Promise.all(holdings.map(h=>fetchQuote(h.ticker))),
+      Promise.all(holdings.map(h=>fetchProfile(h.ticker)))
+    ]);
+    let totalValue=0,totalCost=0;
+    const items=await Promise.all(holdings.map(async(h,i)=>{
+      const q=quotes[i],p=profiles[i]||{};
+      const price=q.c,dayChg=q.dp;
+      const vsAvg=h.cost>0?((price-h.cost)/h.cost*100):0;
+      const value=price*h.shares,basis=h.cost*h.shares,gain=value-basis;
+      totalValue+=value;totalCost+=basis;
+      const chartData=await fetchYahooChart(h.ticker,hPeriod);
+      const periodChg=hPeriod==='1D'?dayChg:calcPeriodChange(chartData);
+      const cid='chart-h-'+h.ticker;
+      const coDesc=p.description?p.description.split('. ').slice(0,2).join('. ')+(p.description.includes('.')?'.':''):'';
+      return {h,price,dayChg,vsAvg,value,basis,gain,chartData,periodChg,cid,coName:p.name||'',coDesc};
+    }));
+
+    el.innerHTML=items.map(({h,price,dayChg,vsAvg,value,basis,gain,periodChg,cid,coName,coDesc})=>{
+      const dc=dayChg>=0?'up':'down';
+      const gc=gain>=0?'var(--up)':'var(--down)';
+      const vc=vsAvg>=0?'var(--up)':'var(--down)';
+      const pc=(periodChg||0)>=0?'var(--up)':'var(--down)';
+      const pid='det-h-'+h.ticker;
+      const periodLabel=hPeriod==='1D'?'today':`${hPeriod} (annualized)`;
+      return `<div class="ticker-card">
+        <div class="ticker-top h-col-row">
+          <div>
+            <div class="ticker-sym">${h.ticker}</div>
+            ${coName?`<div class="ticker-name">${coName}</div>`:''}
+            ${coDesc?`<div class="ticker-desc">${coDesc}</div>`:''}
+            <div style="font-size:11px;color:var(--text-muted);margin-top:4px">${h.shares} sh &middot; avg $${fmt(h.cost,2)}</div>
+          </div>
+          <div>
+            <div class="col-label">Price</div>
+            <div class="col-value">${fmtMoney(price)}</div>
+            <span class="badge ${dc}" style="margin-top:4px">${fmtPct(dayChg)} today</span>
+          </div>
+          <div>
+            <div class="col-label">Gain / Loss</div>
+            <div class="col-value" style="color:${gc}">${gain>=0?'+':''}${fmtMoney(gain)}</div>
+            <div class="col-sub" style="color:${vc}">${fmtPct(vsAvg)} vs avg cost</div>
+          </div>
+          <div>
+            <div class="col-label">Market Value</div>
+            <div class="col-value">${fmtMoney(value)}</div>
+            <div class="col-sub">basis ${fmtMoney(basis)}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <button class="remove-btn" onclick="removeHolding('${h.ticker}')">×</button>
+            <button class="collapse-toggle" data-toggle="${pid}" onclick="toggleCollapse('${pid}')">more ▾</button>
+          </div>
+        </div>
+        <div class="collapsible" id="${pid}">
+          <div class="chart-wrap"><canvas id="${cid}"></canvas></div>
+          <div style="font-size:10px;color:var(--text-muted);padding:0 1.5rem 8px;text-align:right">
+            ${periodLabel}: <span style="color:${pc}">${fmtPct(periodChg)}</span>
+          </div>
+          <div style="padding:0 1.5rem 10px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-sm" onclick="loadAI('${h.ticker}',${h.cost})" style="color:var(--accent-light);border-color:var(--accent-border)">AI analysis</button>
+            <button class="btn btn-sm" onclick="loadNews('${h.ticker}','h-${h.ticker}')">News</button>
+          </div>
+          <div id="ai-${h.ticker}" style="padding:0 1.5rem"></div>
+          <div class="news-wrap" id="news-h-${h.ticker}"></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    items.forEach(({chartData,cid})=>{ if(chartData) renderChart(cid,chartData); });
+
+    const tg=totalValue-totalCost, tgp=totalCost>0?(tg/totalCost*100):0;
+    sum.innerHTML=`<div class="metric-grid" style="margin-top:4px">
+      <div class="metric"><div class="metric-label">Portfolio value</div><div class="metric-value">${fmtMoney(totalValue)}</div></div>
+      <div class="metric"><div class="metric-label">Total invested</div><div class="metric-value">${fmtMoney(totalCost)}</div></div>
+      <div class="metric"><div class="metric-label">Total gain</div><div class="metric-value" style="color:${tg>=0?'var(--up)':'var(--down)'}">${tg>=0?'+':''}${fmtMoney(tg)}</div></div>
+      <div class="metric"><div class="metric-label">Total return</div><div class="metric-value" style="color:${tgp>=0?'var(--up)':'var(--down)'}">${fmtPct(tgp)}</div></div>
+    </div>`;
+    document.getElementById('dash-portfolio').textContent=fmtMoney(totalValue);
+  } catch(e){el.innerHTML='<p class="error-msg">Could not fetch. Check your Finnhub key.</p>';console.error(e);}
+}
+
+// ── WATCHLIST ──
+function addToWatchlist(){
+  const ticker=document.getElementById('w-ticker').value.trim().toUpperCase();
+  const err=document.getElementById('w-error');
+  if(!ticker){err.textContent='Enter a ticker.';return;}
+  if(watchlist.includes(ticker)){err.textContent='Already on watchlist.';return;}
+  err.textContent=''; watchlist.push(ticker); save();
+  document.getElementById('w-ticker').value='';
+  renderWatchlist();
+}
+
+function removeFromWatchlist(ticker){watchlist=watchlist.filter(t=>t!==ticker);save();renderWatchlist();}
+
+async function renderWatchlist(){
+  const el=document.getElementById('watchlist-list');
+  if(!watchlist.length){el.innerHTML='<p class="loading">No tickers yet.</p>';return;}
+  if(FINNHUB_KEY==='YOUR_FINNHUB_KEY'){el.innerHTML='<p class="error-msg">Add your Finnhub key.</p>';return;}
+  el.innerHTML='<p class="loading">Fetching data...</p>';
+  try {
+    const [quotes,metricsList,profiles]=await Promise.all([
+      Promise.all(watchlist.map(t=>fetchQuote(t))),
+      Promise.all(watchlist.map(t=>fetchMetrics(t))),
+      Promise.all(watchlist.map(t=>fetchProfile(t)))
+    ]);
+    const items=await Promise.all(watchlist.map(async(ticker,i)=>{
+      const q=quotes[i],m=metricsList[i].metric||{},p=profiles[i]||{};
+      const chartData=await fetchYahooChart(ticker,wPeriod);
+      const periodChg=wPeriod==='1D'?q.dp:calcPeriodChange(chartData);
+      const cid='chart-w-'+ticker;
+      const coDesc=p.description?p.description.split('. ').slice(0,2).join('. ')+(p.description.includes('.')?'.':''):'';
+      return {ticker,q,m,p,chartData,periodChg,cid,coName:p.name||'',coDesc};
+    }));
+
+    el.innerHTML=items.map(({ticker,q,m,chartData,periodChg,cid,coName,coDesc})=>{
+      const dc=q.dp>=0?'up':'down';
+      const pc=(periodChg||0)>=0?'var(--up)':'var(--down)';
+      const inds=[
+        {label:'PE (TTM)',  val:fmt(m.peNormalizedAnnual,1)},
+        {label:'Fwd PE',   val:fmt(m.forwardPE,1)},
+        {label:'EPS (TTM)',val:m.epsTTM!=null?'$'+fmt(m.epsTTM,2):'—'},
+        {label:'52W High', val:m['52WeekHigh']!=null?'$'+fmt(m['52WeekHigh'],2):'—'},
+        {label:'52W Low',  val:m['52WeekLow']!=null?'$'+fmt(m['52WeekLow'],2):'—'},
+        {label:'Mkt Cap',  val:m.marketCapitalization?'$'+fmt(m.marketCapitalization/1000,1)+'B':'—'},
+      ];
+      const pid='det-w-'+ticker;
+      const periodLabel=wPeriod==='1D'?'today':`${wPeriod} (annualized)`;
+      return `<div class="ticker-card">
+        <div class="ticker-top">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <span class="ticker-sym">${ticker}</span>
+                <span style="font-size:20px;font-weight:500;font-family:'DM Mono',monospace">${fmtMoney(q.c)}</span>
+                <span class="badge ${dc}">${fmtPct(q.dp)} today</span>
+                <span style="font-size:12px;color:var(--text-muted)">H: ${fmtMoney(q.h)} &middot; L: ${fmtMoney(q.l)}</span>
+              </div>
+              ${coName?`<div class="ticker-name" style="margin-top:4px">${coName}</div>`:''}
+              ${coDesc?`<div class="ticker-desc">${coDesc}</div>`:''}
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <button class="btn btn-sm" onclick="loadAI('${ticker}',null)" style="color:var(--accent-light);border-color:var(--accent-border)">AI analysis</button>
+              <button class="collapse-toggle" data-toggle="${pid}" onclick="toggleCollapse('${pid}')">more ▾</button>
+              <button class="remove-btn" onclick="removeFromWatchlist('${ticker}')">×</button>
+            </div>
+          </div>
+        </div>
+        <div class="collapsible" id="${pid}">
+          <div class="indicator-grid">${inds.map(ind=>`<div class="ind-box"><div class="ind-label">${ind.label}</div><div class="ind-val">${ind.val}</div></div>`).join('')}</div>
+          <div class="chart-wrap"><canvas id="${cid}"></canvas></div>
+          <div style="font-size:10px;color:var(--text-muted);padding:0 1.5rem 8px;text-align:right">
+            ${periodLabel}: <span style="color:${pc}">${fmtPct(periodChg)}</span>
+          </div>
+          <div style="padding:0 1.5rem 10px">
+            <button class="btn btn-sm" onclick="loadNews('${ticker}','w-${ticker}')">News</button>
+          </div>
+          <div id="ai-${ticker}" style="padding:0 1.5rem"></div>
+          <div class="news-wrap" id="news-w-${ticker}"></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    items.forEach(({chartData,cid})=>{ if(chartData) renderChart(cid,chartData); });
+  } catch(e){el.innerHTML='<p class="error-msg">Could not fetch data.</p>';console.error(e);}
+}
+
+// ── PAYCHECK ──
+function buildSliders(){
+  document.getElementById('alloc-sliders').innerHTML=ALLOC_CATS.map((c,i)=>`
+    <div class="slider-row">
+      <span class="slider-label">${c.label}</span>
+      <input type="range" min="0" max="100" step="1" value="${allocPcts[i]}" id="slider-${i}"
+        oninput="allocPcts[${i}]=parseInt(this.value);document.getElementById('pct-${i}').textContent=this.value+'%';updateAlloc()"/>
+      <span class="pct-display" id="pct-${i}">${allocPcts[i]}%</span>
+    </div>`).join('');
+}
+
+function paycheckChanged(){
+  const v=parseFloat(document.getElementById('paycheck-amt').value)||0;
+  localStorage.setItem('savvy_payamt',v);
+  updateAlloc();
+}
+
+function updateAlloc(){
+  const pay=parseFloat(document.getElementById('paycheck-amt').value)||0;
+  const total=allocPcts.reduce((a,b)=>a+b,0);
+  document.getElementById('alloc-bars').innerHTML=ALLOC_CATS.map((c,i)=>`
+    <div class="alloc-row">
+      <div class="alloc-label">${c.label}</div>
+      <div class="alloc-bar-wrap"><div class="alloc-bar" style="width:${allocPcts[i]}%;background:${c.color}"></div></div>
+      <div class="alloc-pct">${allocPcts[i]}%</div>
+      <div class="alloc-amt">${pay>0?fmtMoney(pay*allocPcts[i]/100):'—'}</div>
+    </div>`).join('');
+  const rem=100-total;
+  document.getElementById('alloc-remaining').innerHTML=`
+    <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0">
+      <span style="color:var(--text-sec)">Allocated</span>
+      <span style="font-weight:500;font-family:'DM Mono',monospace;color:${total>100?'var(--down)':total===100?'var(--up)':'var(--text)'}">${total}%${total>100?' (over by '+(total-100)+'%)':''}</span>
+    </div>
+    ${pay>0?`<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0">
+      <span style="color:var(--text-sec)">Unallocated</span>
+      <span style="font-weight:500;font-family:'DM Mono',monospace">${fmtMoney(pay*Math.max(0,rem)/100)}</span>
+    </div>`:''}`;
+  save();
+}
+
+// ── RECURRING ──
+function monthlyEquiv(amount,freq){
+  const m={weekly:52/12,biweekly:26/12,monthly:1,quarterly:1/3,annually:1/12};
+  return amount*(m[freq]||1);
+}
+
+function addRecurring(){
+  const name  =document.getElementById('rec-name').value.trim();
+  const cat   =document.getElementById('rec-cat').value;
+  const amount=parseFloat(document.getElementById('rec-amount').value);
+  const freq  =document.getElementById('rec-freq').value;
+  const date  =document.getElementById('rec-date').value.trim();
+  const err   =document.getElementById('rec-error');
+  if(!name||isNaN(amount)){err.textContent='Name and amount required.';return;}
+  err.textContent='';
+  recurring.push({id:Date.now(),name,cat,amount,freq,date});
+  save();
+  document.getElementById('rec-name').value='';
+  document.getElementById('rec-amount').value='';
+  document.getElementById('rec-date').value='';
+  renderRecurring();
+}
+
+function removeRecurring(id){
+  recurring=recurring.filter(r=>r.id!==id);
+  cashflows=cashflows.filter(c=>c.recId!==id);
+  save();renderRecurring();renderCashFlow();
+}
+
+function startEditRec(id){
+  const r=recurring.find(x=>x.id===id);
+  if(!r)return;
+  const tr=document.getElementById('rec-row-'+id);
+  if(!tr)return;
+  tr.classList.remove('data-row');
+  tr.classList.add('edit-row');
+  tr.innerHTML=`
+    <td><input class="edit-input" id="re-name-${id}" value="${r.name}"/></td>
+    <td>
+      <select class="edit-input" id="re-cat-${id}" style="width:100%">
+        ${Object.entries(CAT_LABELS).map(([v,l])=>`<option value="${v}"${r.cat===v?' selected':''}>${l}</option>`).join('')}
+      </select>
+    </td>
+    <td><input class="edit-input" type="number" id="re-amt-${id}" value="${r.amount}" style="width:90px"/></td>
+    <td>
+      <select class="edit-input" id="re-freq-${id}" style="width:100%">
+        ${Object.entries(FREQ_LABELS).map(([v,l])=>`<option value="${v}"${r.freq===v?' selected':''}>${l}</option>`).join('')}
+      </select>
+    </td>
+    <td><input class="edit-input" id="re-date-${id}" value="${r.date||''}"/></td>
+    <td style="font-family:'DM Mono',monospace;color:var(--neutral)">—</td>
+    <td style="display:flex;gap:4px">
+      <button class="btn btn-sm btn-primary" onclick="saveEditRec(${id})">Save</button>
+      <button class="btn btn-sm" onclick="renderRecurring()">Cancel</button>
+    </td>`;
+}
+
+function saveEditRec(id){
+  const idx=recurring.findIndex(x=>x.id===id);
+  if(idx<0)return;
+  recurring[idx]={
+    ...recurring[idx],
+    name:document.getElementById('re-name-'+id).value.trim(),
+    cat:document.getElementById('re-cat-'+id).value,
+    amount:parseFloat(document.getElementById('re-amt-'+id).value)||0,
+    freq:document.getElementById('re-freq-'+id).value,
+    date:document.getElementById('re-date-'+id).value.trim(),
+  };
+  save();renderRecurring();
+}
+
+function renderRecurring(){
+  const el=document.getElementById('recurring-list');
+  const sum=document.getElementById('recurring-summary');
+  if(!recurring.length){el.innerHTML='<p class="loading">No recurring payments yet.</p>';sum.innerHTML='';return;}
+  const groups={investment:[],subscription:[],bill:[],other:[]};
+  recurring.forEach(r=>groups[r.cat].push(r));
+  const catTotals={investment:0,subscription:0,bill:0,other:0};
+  let grand=0;
+  let html='';
+  Object.entries(groups).forEach(([cat,items])=>{
+    if(!items.length)return;
+    const ct=items.reduce((a,r)=>a+monthlyEquiv(r.amount,r.freq),0);
+    catTotals[cat]=ct;grand+=ct;
+    html+=`<div class="section-label" style="margin-top:16px">${CAT_LABELS[cat]}s
+      <span style="font-family:'DM Mono',monospace;color:var(--neutral);font-size:11px"> ${fmtMoney(ct)}/mo</span>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="rec-table">
+        <thead><tr>
+          <th>Name</th><th>Category</th><th>Amount</th><th>Frequency</th><th>Due</th>
+          <th>Monthly equiv. <span style="font-size:9px;opacity:.6">(annualized)</span></th><th></th>
+        </tr></thead>
+        <tbody>${items.map(r=>{
+          const me=monthlyEquiv(r.amount,r.freq);
+          return `<tr class="data-row" id="rec-row-${r.id}">
+            <td style="font-weight:500">${r.name}</td>
+            <td><span class="cat-badge ${CAT_CLASSES[r.cat]}">${CAT_LABELS[r.cat]}</span></td>
+            <td style="font-family:'DM Mono',monospace">${fmtMoney(r.amount)}</td>
+            <td style="color:var(--text-sec)">${FREQ_LABELS[r.freq]}</td>
+            <td style="color:var(--text-sec)">${r.date||'—'}</td>
+            <td style="font-family:'DM Mono',monospace;color:var(--neutral)">${fmtMoney(me)}</td>
+            <td style="display:flex;gap:4px">
+              <button class="btn btn-sm" onclick="startEditRec(${r.id})">Edit</button>
+              <button class="remove-btn" onclick="removeRecurring(${r.id})">×</button>
+            </td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`;
+  });
+  el.innerHTML=html;
+  const breakdown=Object.entries(catTotals).filter(([,v])=>v>0)
+    .map(([cat,v])=>`<span style="font-size:11px;color:var(--text-muted)">${CAT_LABELS[cat]}: <span style="font-family:'DM Mono',monospace;color:var(--neutral)">${fmtMoney(v)}</span></span>`)
+    .join('<span style="color:var(--text-muted);margin:0 6px">&middot;</span>');
+  sum.innerHTML=`<div class="metric-grid" style="margin-top:8px">
+    <div class="metric">
+      <div class="metric-label">Monthly total</div>
+      <div class="metric-value" style="color:var(--neutral)">${fmtMoney(grand)}</div>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px">${breakdown}</div>
+    </div>
+    <div class="metric"><div class="metric-label">Annual total</div><div class="metric-value" style="color:var(--neutral)">${fmtMoney(grand*12)}</div></div>
+    <div class="metric"><div class="metric-label">Total items</div><div class="metric-value">${recurring.length}</div></div>
+  </div>`;
+}
+
+// ── CASHFLOW ──
+function populateCFDropdown(){
+  const sel=document.getElementById('cf-recurring');
+  const mapped=new Set(cashflows.map(c=>c.recId));
+  const unmapped=recurring.filter(r=>!mapped.has(r.id));
+  sel.innerHTML=unmapped.length
+    ?unmapped.map(r=>`<option value="${r.id}">${r.name} (${fmtMoney(r.amount)} ${FREQ_LABELS[r.freq]})</option>`).join('')
+    :'<option value="">All payments mapped</option>';
+}
+
+function updateCFSourceList(){
+  const dl=document.getElementById('cf-source-list');
+  const sources=[...new Set(cashflows.map(c=>c.source))];
+  dl.innerHTML=sources.map(s=>`<option value="${s}">`).join('');
+}
+
+function addCashFlow(){
+  const recId=parseInt(document.getElementById('cf-recurring').value);
+  const source=document.getElementById('cf-source').value.trim();
+  const err=document.getElementById('cf-error');
+  if(!recId||!source){err.textContent='Select a payment and enter an account.';return;}
+  err.textContent='';
+  const rec=recurring.find(r=>r.id===recId);
+  if(!rec)return;
+  cashflows.push({recId,name:rec.name,amount:rec.amount,freq:rec.freq,cat:rec.cat,source});
+  save();
+  document.getElementById('cf-source').value='';
+  populateCFDropdown();updateCFSourceList();renderCashFlow();
+}
+
+function removeCashFlow(recId){
+  cashflows=cashflows.filter(c=>c.recId!==recId);
+  save();populateCFDropdown();updateCFSourceList();renderCashFlow();
+}
+
+function startEditCF(recId){
+  const c=cashflows.find(x=>x.recId===recId);
+  if(!c)return;
+  const el=document.getElementById('cf-item-'+recId);
+  if(!el)return;
+  const sources=[...new Set(cashflows.map(x=>x.source))];
+  el.outerHTML=`<div class="cf-edit-row" id="cf-item-${recId}">
+    <div style="font-size:13px;font-weight:500">${c.name} <span class="cat-badge ${CAT_CLASSES[c.cat]}">${CAT_LABELS[c.cat]}</span></div>
+    <div>
+      <input class="edit-input" id="cfe-src-${recId}" value="${c.source}" list="cf-source-list" style="width:100%"/>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-sm btn-primary" onclick="saveEditCF(${recId})">Save</button>
+      <button class="btn btn-sm" onclick="renderCashFlow()">Cancel</button>
+    </div>
+  </div>`;
+}
+
+function saveEditCF(recId){
+  const idx=cashflows.findIndex(x=>x.recId===recId);
+  if(idx<0)return;
+  const src=document.getElementById('cfe-src-'+recId)?.value.trim();
+  if(src) cashflows[idx].source=src;
+  save();populateCFDropdown();updateCFSourceList();renderCashFlow();
+}
+
+function renderCashFlow(){
+  const el=document.getElementById('cashflow-list');
+  const sum=document.getElementById('cashflow-summary');
+  if(!cashflows.length){el.innerHTML='<p class="loading">No cash flow mappings yet.</p>';sum.innerHTML='';return;}
+  const bySource={};
+  cashflows.forEach(c=>{if(!bySource[c.source])bySource[c.source]=[];bySource[c.source].push(c);});
+  let html='';
+  Object.entries(bySource).forEach(([source,items])=>{
+    const total=items.reduce((a,c)=>a+monthlyEquiv(c.amount,c.freq),0);
+    html+=`<div class="section-label" style="margin-top:16px">${source}
+      <span style="font-family:'DM Mono',monospace;color:var(--neutral);font-size:11px"> ${fmtMoney(total)}/mo</span>
+    </div>`;
+    items.forEach(c=>{
+      html+=`<div class="cf-item" id="cf-item-${c.recId}">
+        <div><div style="font-size:13px;font-weight:500">${c.name}</div><span class="cat-badge ${CAT_CLASSES[c.cat]}">${CAT_LABELS[c.cat]}</span></div>
+        <div><div style="font-size:13px;font-family:'DM Mono',monospace;color:var(--neutral)">${fmtMoney(c.amount)}</div><div style="font-size:11px;color:var(--text-muted)">${FREQ_LABELS[c.freq]}</div></div>
+        <div style="font-size:12px;color:var(--text-sec)">${source}</div>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm" onclick="startEditCF(${c.recId})">Edit</button>
+          <button class="remove-btn" onclick="removeCashFlow(${c.recId})">×</button>
+        </div>
+      </div>`;
+    });
+  });
+  const grand=cashflows.reduce((a,c)=>a+monthlyEquiv(c.amount,c.freq),0);
+  el.innerHTML=html;
+  sum.innerHTML=`<div class="metric-grid" style="margin-top:8px">
+    <div class="metric"><div class="metric-label">Total mapped/mo</div><div class="metric-value" style="color:var(--neutral)">${fmtMoney(grand)}</div></div>
+    <div class="metric"><div class="metric-label">Accounts used</div><div class="metric-value">${Object.keys(bySource).length}</div></div>
+    <div class="metric"><div class="metric-label">Payments mapped</div><div class="metric-value">${cashflows.length}</div></div>
+  </div>`;
+}
+
+// ── INIT ──
+buildSliders();
+buildTimeSel('h-time-sel', hPeriod, 'setHPeriod');
+buildTimeSel('w-time-sel', wPeriod, 'setWPeriod');
+
+const savedPay=localStorage.getItem('savvy_payamt');
+if(savedPay) document.getElementById('paycheck-amt').value=savedPay;
+updateAlloc();
+
+renderHoldings();
+renderWatchlist();
+renderRecurring();
+renderCashFlow();
+updateDashboard();
+
+// restore last page
+const lastPage=localStorage.getItem('savvy_page')||'dashboard';
+showPage(lastPage,null);
+</script>
+</body>
+</html>
