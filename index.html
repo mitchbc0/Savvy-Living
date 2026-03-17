@@ -1006,9 +1006,8 @@ function syncDollarInput(i){
 
 function updateAlloc(){
   const pay=avgPay()||0,total=allocPcts.reduce((a,b)=>a+b,0);
-  // sync all dollar inputs when pay changes
   ALLOC_CATS.forEach((_,i)=>syncDollarInput(i));
-  el('alloc-bars').innerHTML=ALLOC_CATS.map((c,i)=>`<div class="ar"><div class="alabel">${c.label}</div><div class="abw"><div class="ab2" style="width:${allocPcts[i]}%;background:${c.color}"></div></div><div class="apct">${allocPcts[i]}%</div><div class="aamt">${pay>0?fmtM(pay*allocPcts[i]/100):'—'}</div></div>`).join('');
+  el('alloc-bars').innerHTML=ALLOC_CATS.map((c,i)=>`<div class="ar"><div class="alabel">${c.label}</div><div class="abw" style="height:10px"><div class="ab2" style="width:${allocPcts[i]}%;background:${c.color}"></div></div><div class="aamt">${pay>0?fmtM(pay*allocPcts[i]/100):'—'}</div></div>`).join('');
   const rem=100-total;
   el('alloc-rem').innerHTML=`<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0"><span style="color:var(--ts)">Allocated</span><span style="font-weight:500;font-family:'DM Mono',monospace;color:${total>100?'var(--dn)':total===100?'var(--up)':'var(--text)'}">${total}%${total>100?' (over '+(total-100)+'%)':''}</span></div>${pay>0?`<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0"><span style="color:var(--ts)">Unallocated</span><span style="font-weight:500;font-family:'DM Mono',monospace">${fmtM(pay*Math.max(0,rem)/100)}</span></div>`:''} `;
   save();
