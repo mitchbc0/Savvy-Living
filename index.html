@@ -400,9 +400,9 @@ const GEMINI='AIzaSyDfKUkWaE567FKIg-owjqV5_yvPQM-YnX8';
 const PERIODS=['1D','1W','1M','3M','6M','YTD','1Y','5Y','10Y','All'];
 const PIE_COLORS=['#2d7ef7','#22c988','#a78bfa','#f05d5d','#fbbf24','#f472b6','#38bdf8','#fb923c','#4ade80','#e879f9'];
 const ALLOC_CATS=[
-  {label:'Rent / Housing',color:'#2d7ef7'},{label:'Groceries',color:'#22c988'},
-  {label:'Roth IRA / Investing',color:'#a78bfa'},{label:'Student Loans',color:'#f05d5d'},
-  {label:'Savings',color:'#fbbf24'},{label:'Discretionary',color:'#f472b6'},
+  {label:'Housing / Utilities',color:'#2d7ef7'},{label:'Grocery / Dining',color:'#22c988'},
+  {label:'Personal Investing',color:'#a78bfa'},{label:'Retirement',color:'#f05d5d'},
+  {label:'Loans / Debt',color:'#fbbf24'},{label:'Savings',color:'#f472b6'},
 ];
 const CAT_L={investment:'Investment',subscription:'Subscription',bill:'Bill',other:'Other'};
 const CAT_CL={investment:'ci',subscription:'cs',bill:'cb2',other:'co'};
@@ -705,7 +705,7 @@ function expHTML(ticker,prefix,opts){
         <div id="desc-${ticker}" style="font-size:12px;color:var(--ts);line-height:1.65;min-height:20px">Loading...</div>
       </div>
       <div class="exp-panel">
-        <div class="exp-lbl">Analyst consensus</div>
+        <div class="exp-lbl">Wall Street consensus</div>
         ${sentHTML(rec)}
       </div>
     </div>
