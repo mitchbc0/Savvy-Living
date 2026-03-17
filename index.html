@@ -390,6 +390,21 @@ select option{background:#0d1f35}
     <p style="font-size:11px;color:var(--tm);margin-top:4px">Add recurring payments first, then map them here.</p>
   </div>
   <div id="cf-list"></div><div id="cf-sum"></div>
+  <div class="ph" style="margin-top:2rem;margin-bottom:1rem">
+    <div class="pt" style="font-size:16px">Manual entries</div>
+    <div class="ps">Transfers, savings moves, or any payment not in your recurring list</div>
+  </div>
+  <div class="card">
+    <div class="ir" style="flex-wrap:wrap;gap:8px">
+      <input type="text" id="me-name" placeholder="Description (e.g. Savings transfer)" style="width:200px"/>
+      <input type="number" id="me-amount" placeholder="Amount $" style="width:110px" min="0" step="any"/>
+      <input type="text" id="me-from" placeholder="From account" style="width:160px" list="cf-src-dl"/>
+      <input type="text" id="me-to" placeholder="To account / destination" style="width:160px" list="cf-src-dl"/>
+      <button class="btn bp" onclick="addManualEntry()">Add</button>
+    </div>
+    <div id="me-err" class="emsg"></div>
+  </div>
+  <div id="me-list"></div>
 </div>
 
 </main>
@@ -414,6 +429,7 @@ let watchlist=JSON.parse(lsg('sl_w') ||'[]');
 let notes    =JSON.parse(lsg('sl_notes')||'{}');
 let recurring=JSON.parse(lsg('sl_r') ||'[]');
 let cashflows=JSON.parse(lsg('sl_cf')||'[]');
+let manualEntries=JSON.parse(lsg('sl_me')||'[]');
 let allocPcts=JSON.parse(lsg('sl_ap')||'null')||[30,10,20,15,10,10];
 let paychecks=JSON.parse(lsg('sl_pc')||'[]');
 let payType  =lsg('sl_pt')||'salary';
@@ -431,6 +447,7 @@ function save(){
   localStorage.setItem('sl_notes', JSON.stringify(notes));
   localStorage.setItem('sl_r',  JSON.stringify(recurring));
   localStorage.setItem('sl_cf', JSON.stringify(cashflows));
+  localStorage.setItem('sl_me', JSON.stringify(manualEntries));
   localStorage.setItem('sl_ap', JSON.stringify(allocPcts));
   localStorage.setItem('sl_pc', JSON.stringify(paychecks));
   localStorage.setItem('sl_pt', payType);
@@ -453,7 +470,7 @@ function showPage(p,btn){
   if(b)b.classList.add('active');
   document.querySelectorAll(`.mnb[data-page="${p}"]`).forEach(b=>b.classList.add('active'));
   localStorage.setItem('sl_page',p);
-  if(p==='cashflow'){popCFDrop();updateCFSrc();}
+  if(p==='cashflow'){popCFDrop();updateCFSrc();renderManualEntries();}
   if(p==='dashboard')updateDash();
 }
 function navTo(p){showPage(p,null);}
@@ -1054,7 +1071,15 @@ function renderRec(){
 
 // CASHFLOW
 function popCFDrop(){const s=el('cf-rec');const mapped=new Set(cashflows.map(c=>c.recId));const un=recurring.filter(r=>!mapped.has(r.id));s.innerHTML=un.length?un.map(r=>`<option value="${r.id}">${r.name} (${fmtM(r.amount)} ${FREQ_L[r.freq]})</option>`).join(''):'<option value="">All payments mapped</option>';}
-function updateCFSrc(){const dl=el('cf-src-dl');const sources=[...new Set(cashflows.map(c=>c.source))];dl.innerHTML=sources.map(s=>`<option value="${s}">`).join('');}
+function updateCFSrc(){
+  const dl=el('cf-src-dl');
+  const sources=[...new Set([
+    ...cashflows.map(c=>c.source),
+    ...manualEntries.map(e=>e.from),
+    ...manualEntries.filter(e=>e.to).map(e=>e.to)
+  ])];
+  dl.innerHTML=sources.map(s=>`<option value="${s}">`).join('');
+}
 function addCF(){
   const recId=parseInt(el('cf-rec').value),source=el('cf-src').value.trim(),err=el('cf-err');
   if(!recId||!source){err.textContent='Select a payment and enter an account.';return;}
@@ -1084,6 +1109,43 @@ function renderCF(){
   sum.innerHTML=`<div class="mg" style="margin-top:8px"><div class="met"><div class="ml">Total mapped/mo</div><div class="mv" style="color:var(--neu)">${fmtM(grand)}</div></div><div class="met"><div class="ml">Accounts used</div><div class="mv">${Object.keys(bySrc).length}</div></div><div class="met"><div class="ml">Payments mapped</div><div class="mv">${cashflows.length}</div></div></div>`;
 }
 
+// MANUAL ENTRIES
+function addManualEntry(){
+  const name=el('me-name').value.trim();
+  const amount=parseFloat(el('me-amount').value);
+  const from=el('me-from').value.trim();
+  const to=el('me-to').value.trim();
+  const err=el('me-err');
+  if(!name||isNaN(amount)||!from){err.textContent='Description, amount, and source account required.';return;}
+  err.textContent='';
+  manualEntries.push({id:Date.now(),name,amount,from,to});
+  save();
+  el('me-name').value='';el('me-amount').value='';el('me-from').value='';el('me-to').value='';
+  renderManualEntries();
+  updateCFSrc();
+}
+function removeManualEntry(id){
+  manualEntries=manualEntries.filter(e=>e.id!==id);
+  save();renderManualEntries();updateCFSrc();
+}
+function renderManualEntries(){
+  const list=el('me-list');
+  if(!manualEntries.length){list.innerHTML='<p class="loading">No manual entries yet.</p>';return;}
+  list.innerHTML=`<div class="card" style="padding:0;overflow:hidden">
+    <table class="rt"><thead><tr>
+      <th>Description</th><th>Amount</th><th>From</th><th>To</th><th></th>
+    </tr></thead><tbody>
+    ${manualEntries.map(e=>`<tr class="dr">
+      <td style="font-weight:500">${e.name}</td>
+      <td style="font-family:'DM Mono',monospace;color:var(--neu)">${fmtM(e.amount)}</td>
+      <td style="color:var(--ts)">${e.from}</td>
+      <td style="color:var(--ts)">${e.to||'—'}</td>
+      <td><button class="rb" onclick="removeManualEntry(${e.id})">×</button></td>
+    </tr>`).join('')}
+    </tbody></table>
+  </div>`;
+}
+
 // INIT
 buildTS('h-ts',hPeriod,'setHP');
 buildTS('w-ts',wPeriod,'setWP');
@@ -1092,7 +1154,7 @@ el('pay-sal-input').style.display=payType==='salary'?'block':'none';
 el('pay-hr-input').style.display=payType==='hourly'?'block':'none';
 el('pf-'+payFreq)?.classList.add('active');
 if(salary){el('sal-input').value=salary;}
-renderHoldings();renderWatchlist();renderPCs();renderRec();renderCF();updateDash();updatePaySummary();
+renderHoldings();renderWatchlist();renderPCs();renderRec();renderCF();renderManualEntries();updateDash();updatePaySummary();
 showPage(lsg('sl_page')||'dashboard',null);
 </script>
 </body>
