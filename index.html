@@ -121,7 +121,7 @@ select option{background:#0d1f35}
 .sv-buy{background:var(--upbg);color:var(--up)}.sv-hold{background:rgba(251,191,36,.15);color:#fbbf24}.sv-sell{background:var(--dnbg);color:var(--dn)}
 .sent-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
 .sent-cat{font-size:11px;color:var(--ts);width:32px;flex-shrink:0}
-.sent-bar-out{flex:0 1 80px;height:8px;background:var(--bgc2);border-radius:3px;overflow:hidden}
+.sent-bar-out{flex:1;height:10px;background:var(--bgc2);border-radius:3px;overflow:hidden}
 .sent-bar-in{height:100%;border-radius:3px}
 .sent-n{font-size:11px;font-family:'DM Mono',monospace;width:24px;flex-shrink:0;color:var(--tm)}
 /* NEWS */
@@ -494,7 +494,9 @@ function buildTS(id,cur,cb){
 }
 async function updatePeriodBadge(prefix,ticker,period){
   const c=C[ticker];if(!c)return;
-  const chg=await getPeriodChange(ticker,period);
+  let chg=await getPeriodChange(ticker,period);
+  // Always fall back to today's change if period data unavailable
+  if(chg==null) chg=c.quote?.dp||null;
   // Update the inline badge next to price
   const badge=el(`pb-${prefix}-${ticker}`);
   if(badge){
@@ -629,7 +631,6 @@ function newsHTML(news){
 // EXPANDED HTML — layout: About+Indicators left, Consensus right | Notes full | News full
 function expHTML(ticker,prefix,opts){
   const{avgCost,inds,rec,news}=opts;
-  const period=prefix==='h'?hPeriod:wPeriod;
   const noteVal=(notes[ticker]||'').replace(/</g,'&lt;');
   return`<div class="coll" id="coll-${prefix}-${ticker}">
     <div class="exp-grid" style="border-bottom:0.5px solid var(--border)">
@@ -642,25 +643,26 @@ function expHTML(ticker,prefix,opts){
       <div class="exp-panel">
         <div class="exp-lbl">Wall Street Consensus</div>
         ${sentHTML(rec)}
+        <div class="divi"></div>
+        <div class="exp-lbl">Recent news</div>
+        ${newsHTML(news)}
       </div>
     </div>
-    <div id="pl-${prefix}-${ticker}" class="pl" style="border-bottom:0.5px solid var(--border);padding-bottom:8px;margin-bottom:0">${period}: <span style="color:var(--tm)">—</span></div>
-    <div class="exp-full">
-      <div class="exp-lbl">Notes</div>
-      <textarea id="notes-${prefix}-${ticker}"
-        style="width:100%;background:var(--bgc2);border:0.5px solid var(--border);border-radius:var(--rsm);
-          color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;padding:8px 10px;
-          resize:vertical;min-height:64px;outline:none;line-height:1.5"
-        placeholder="Price target, thesis, what you're watching for..."
-        onclick="event.stopPropagation()"
-        oninput="event.stopPropagation();notes['${ticker}']=this.value;save()"
-      >${noteVal}</textarea>
+    <div class="exp-grid">
+      <div class="exp-panel" style="border-top:0.5px solid var(--border)">
+        <div class="exp-lbl">Notes</div>
+        <textarea id="notes-${prefix}-${ticker}"
+          style="width:100%;background:var(--bgc2);border:0.5px solid var(--border);border-radius:var(--rsm);
+            color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;padding:8px 10px;
+            resize:vertical;min-height:80px;outline:none;line-height:1.5"
+          placeholder="Price target, thesis, what you're watching for..."
+          onclick="event.stopPropagation()"
+          oninput="event.stopPropagation();notes['${ticker}']=this.value;save()"
+        >${noteVal}</textarea>
+      </div>
+      <div class="exp-panel" style="border-top:0.5px solid var(--border)"></div>
     </div>
-    <div class="exp-full">
-      <div class="exp-lbl">Recent news</div>
-      ${newsHTML(news)}
-    </div>
-  </div>`;
+  </div>\``;
 }
 
 // INDICATORS
